@@ -70,6 +70,7 @@ sequelize.authenticate()
 
 // Import routes
 const authRoutes = require("./routes/auth");
+const indexRoutes = require("./routes/index");
 const dashboardRoutes = require("./routes/dashboard");
 const webhookRoutes = require("./routes/webhooks");
 const whatsappRoutes = require("./routes/whatsapp");
@@ -78,6 +79,7 @@ const adminRoutes = require("./routes/admin");
 const healthRoutes = require("./routes/health");
 
 // Routes
+app.use("/", indexRoutes);
 app.use("/", authRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/webhooks", webhookRoutes);
