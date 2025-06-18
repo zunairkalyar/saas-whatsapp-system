@@ -8,6 +8,15 @@ const User = sequelize.define('User', {
         primaryKey: true,
         autoIncrement: true
     },
+    tenant_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'tenants',
+            key: 'id'
+        },
+        onDelete: 'CASCADE'
+    },
     email: {
         type: DataTypes.STRING(255),
         allowNull: false,
@@ -70,6 +79,7 @@ const User = sequelize.define('User', {
 }, {
     tableName: 'users',
     indexes: [
+        { fields: ['tenant_id'] },
         { fields: ['email'] },
         { fields: ['shop_domain'] },
         { fields: ['account_status'] }

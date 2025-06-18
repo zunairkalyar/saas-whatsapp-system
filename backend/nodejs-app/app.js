@@ -5,10 +5,12 @@ const helmet = require("helmet");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const cookieParser = require("cookie-parser");
+const session = require("express-session");
 const sessionConfig = require("./config/session");
 const { sequelize } = require("./config/database");
 const { setupAssociations } = require("./models");
 const errorHandler = require("./middleware/errorHandler");
+const tenantResolver = require("./middleware/tenantResolver");
 
 // Load environment variables
 dotenv.config();
@@ -28,12 +30,19 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Body Parsers
+function rawBodySaver(req, res, buf) {
+    if (buf && buf.length) {
+        req.rawBody = buf.toString('utf8');
+    }
+}
+app.use('/webhooks/shopify', express.json({ verify: rawBodySaver }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(tenantResolver);
 
 // Session Configuration
-app.use(sessionConfig);
+app.use(session(sessionConfig));
 
 // View Engine Setup
 app.set("views", path.join(__dirname, "views"));

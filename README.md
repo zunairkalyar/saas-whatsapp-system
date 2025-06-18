@@ -98,6 +98,7 @@ npm install
 ```bash
 cp backend/.env.example backend/.env
 # Edit .env file with your configuration
+# Set MULTI_TENANT=true if using subdomain based tenant routing
 ```
 
 5. Set up the database:
