@@ -35,7 +35,8 @@ function rawBodySaver(req, res, buf) {
         req.rawBody = buf.toString('utf8');
     }
 }
-app.use('/webhooks/shopify', express.json({ verify: rawBodySaver }));
+// Use raw parser for Shopify webhooks so we can verify HMAC using the raw body
+app.use('/webhooks/shopify', express.raw({ type: 'application/json', verify: rawBodySaver }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
