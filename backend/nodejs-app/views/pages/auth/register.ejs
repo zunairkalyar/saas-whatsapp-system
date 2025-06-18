@@ -1,0 +1,45 @@
+<div class="auth-card">
+    <h2 class="auth-title">Register for <%= appName %></h2>
+    <p class="auth-subtitle">Create your account to get started</p>
+
+    <% if (success_msg && success_msg.length > 0) { %>
+        <div class="alert alert-success"><%= success_msg %></div>
+    <% } %>
+    <% if (error_msg && error_msg.length > 0) { %>
+        <div class="alert alert-danger"><%= error_msg %></div>
+    <% } %>
+    <% if (error && error.length > 0) { %>
+        <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+    <% if (errors && errors.length > 0) { %>
+        <ul class="alert alert-danger">
+            <% errors.forEach(err => { %>
+                <li><%= err.msg %></li>
+            <% }); %>
+        </ul>
+    <% } %>
+
+    <form action="/register" method="POST" class="auth-form">
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email" value="<%= oldInput.email || '' %>" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+        </div>
+        <div class="form-group">
+            <label for="confirm_password">Confirm Password</label>
+            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
+        </div>
+        <div class="form-group">
+            <label for="shop_domain">Shopify Shop Domain</label>
+            <input type="text" id="shop_domain" name="shop_domain" placeholder="e.g., your-shop.myshopify.com" value="<%= oldInput.shop_domain || '' %>" required>
+            <small class="form-text text-muted">This is your .myshopify.com domain.</small>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Register</button>
+    </form>
+    <p class="auth-link">Already have an account? <a href="/login">Login here</a></p>
+</div>
+
+

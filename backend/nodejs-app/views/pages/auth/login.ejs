@@ -1,0 +1,36 @@
+<div class="auth-card">
+    <h2 class="auth-title">Login to <%= appName %></h2>
+    <p class="auth-subtitle">Enter your credentials to access your account</p>
+
+    <% if (success_msg && success_msg.length > 0) { %>
+        <div class="alert alert-success"><%= success_msg %></div>
+    <% } %>
+    <% if (error_msg && error_msg.length > 0) { %>
+        <div class="alert alert-danger"><%= error_msg %></div>
+    <% } %>
+    <% if (error && error.length > 0) { %>
+        <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+    <% if (errors && errors.length > 0) { %>
+        <ul class="alert alert-danger">
+            <% errors.forEach(err => { %>
+                <li><%= err.msg %></li>
+            <% }); %>
+        </ul>
+    <% } %>
+
+    <form action="/login" method="POST" class="auth-form">
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email" value="<%= oldInput.email || '' %>" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Login</button>
+    </form>
+    <p class="auth-link">Don't have an account? <a href="/register">Register here</a></p>
+</div>
+
+

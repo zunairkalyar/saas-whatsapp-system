@@ -1,0 +1,11 @@
+<div class="container-fluid text-center">
+    <h1 class="display-1">500</h1>
+    <h2 class="display-4">Server Error</h2>
+    <p class="lead">Oops! Something went wrong on our end. We are working to fix it.</p>
+    <% if (error && error.message) { %>
+        <p class="text-danger">Error: <%= error.message %></p>
+    <% } %>
+    <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+</div>
+
+

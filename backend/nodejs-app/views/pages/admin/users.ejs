@@ -1,0 +1,264 @@
+<!-- Users Management Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1">User Management</h4>
+        <p class="text-muted mb-0">Manage all registered users and their accounts</p>
+    </div>
+    <div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+            <i class="fas fa-plus"></i> Add User
+        </button>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="/admin/users" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search Users</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="<%= search %>" placeholder="Email, name, or shop domain">
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Account Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="active" <%= status === 'active' ? 'selected' : '' %>>Active</option>
+                    <option value="pending" <%= status === 'pending' ? 'selected' : '' %>>Pending</option>
+                    <option value="suspended" <%= status === 'suspended' ? 'selected' : '' %>>Suspended</option>
+                    <option value="inactive" <%= status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="limit" class="form-label">Results per page</label>
+                <select class="form-select" id="limit" name="limit">
+                    <option value="25" <%= req.query.limit == 25 ? 'selected' : '' %>>25</option>
+                    <option value="50" <%= req.query.limit == 50 ? 'selected' : '' %>>50</option>
+                    <option value="100" <%= req.query.limit == 100 ? 'selected' : '' %>>100</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-search"></i> Filter
+                </button>
+                <a href="/admin/users" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-users"></i> Users (<%= totalUsers.toLocaleString() %> total)
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>User</th>
+                        <th>Shop Domain</th>
+                        <th>Subscription</th>
+                        <th>Usage</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (users.length === 0) { %>
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No users found matching your criteria</p>
+                            </td>
+                        </tr>
+                    <% } else { %>
+                        <% users.forEach(function(user) { %>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-3">
+                                            <i class="fas fa-user-circle fa-2x text-muted"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold">
+                                                <a href="/admin/users/<%= user.id %>" class="text-decoration-none">
+                                                    <%= user.email %>
+                                                </a>
+                                            </div>
+                                            <small class="text-muted">
+                                                <%= user.first_name %> <%= user.last_name %>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <% if (user.shop_domain) { %>
+                                        <code><%= user.shop_domain %></code>
+                                    <% } else { %>
+                                        <span class="text-muted">Not connected</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (user.subscription && user.subscription.plan) { %>
+                                        <span class="badge bg-<%= user.subscription.plan.name === 'Free' ? 'secondary' : user.subscription.plan.name === 'Basic' ? 'primary' : user.subscription.plan.name === 'Pro' ? 'success' : 'warning' %>">
+                                            <%= user.subscription.plan.name %>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="badge bg-light text-dark">No Plan</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (user.subscription) { %>
+                                        <div class="progress" style="height: 20px;">
+                                            <% 
+                                                const usagePercent = user.subscription.monthly_limit > 0 
+                                                    ? Math.min((user.subscription.current_usage / user.subscription.monthly_limit) * 100, 100)
+                                                    : 0;
+                                                const progressClass = usagePercent >= 90 ? 'bg-danger' : usagePercent >= 75 ? 'bg-warning' : 'bg-success';
+                                            %>
+                                            <div class="progress-bar <%= progressClass %>" 
+                                                 style="width: <%= usagePercent %>%">
+                                                <%= user.subscription.current_usage %>/<%= user.subscription.monthly_limit %>
+                                            </div>
+                                        </div>
+                                    <% } else { %>
+                                        <span class="text-muted">N/A</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% 
+                                        let statusClass = 'secondary';
+                                        if (user.account_status === 'active') statusClass = 'success';
+                                        else if (user.account_status === 'pending') statusClass = 'warning';
+                                        else if (user.account_status === 'suspended') statusClass = 'danger';
+                                    %>
+                                    <span class="badge bg-<%= statusClass %>">
+                                        <%= user.account_status.charAt(0).toUpperCase() + user.account_status.slice(1) %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        <%= new Date(user.created_at).toLocaleDateString() %>
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="/admin/users/<%= user.id %>" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <% if (user.account_status === 'active') { %>
+                                            <button class="btn btn-sm btn-outline-warning" 
+                                                    onclick="suspendUser(<%= user.id %>, '<%= user.email %>')">
+                                                <i class="fas fa-pause"></i>
+                                            </button>
+                                        <% } else if (user.account_status === 'suspended') { %>
+                                            <button class="btn btn-sm btn-outline-success" 
+                                                    onclick="activateUser(<%= user.id %>, '<%= user.email %>')">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                        <% } %>
+                                        <% if (admin.role === 'super_admin') { %>
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    onclick="resetPassword(<%= user.id %>, '<%= user.email %>')">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+                                        <% } %>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    <% if (totalPages > 1) { %>
+        <div class="card-footer">
+            <nav aria-label="Users pagination">
+                <ul class="pagination justify-content-center mb-0">
+                    <% if (hasPrevPage) { %>
+                        <li class="page-item">
+                            <a class="page-link" href="?page=<%= prevPage %>&search=<%= search %>&status=<%= status %>">
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </a>
+                        </li>
+                    <% } %>
+                    
+                    <% for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
+                        <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                            <a class="page-link" href="?page=<%= i %>&search=<%= search %>&status=<%= status %>">
+                                <%= i %>
+                            </a>
+                        </li>
+                    <% } %>
+                    
+                    <% if (hasNextPage) { %>
+                        <li class="page-item">
+                            <a class="page-link" href="?page=<%= nextPage %>&search=<%= search %>&status=<%= status %>">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    <% } %>
+                </ul>
+            </nav>
+            
+            <div class="text-center mt-2">
+                <small class="text-muted">
+                    Showing <%= ((currentPage - 1) * 25) + 1 %> to <%= Math.min(currentPage * 25, totalUsers) %> 
+                    of <%= totalUsers.toLocaleString() %> users
+                </small>
+            </div>
+        </div>
+    <% } %>
+</div>
+
+<!-- Modals and Scripts -->
+<script>
+function suspendUser(userId, email) {
+    if (confirm(`Are you sure you want to suspend user ${email}?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/users/${userId}/suspend`;
+        
+        const reasonInput = document.createElement('input');
+        reasonInput.type = 'hidden';
+        reasonInput.name = 'reason';
+        reasonInput.value = 'Suspended by admin';
+        form.appendChild(reasonInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function activateUser(userId, email) {
+    if (confirm(`Are you sure you want to activate user ${email}?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/users/${userId}/activate`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function resetPassword(userId, email) {
+    if (confirm(`Are you sure you want to reset the password for ${email}? This will generate a new temporary password.`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/users/${userId}/reset-password`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+

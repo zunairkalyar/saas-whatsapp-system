@@ -1,0 +1,65 @@
+<% if (error) { %>
+    <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        <% if (error === 'session_expired') { %>
+            Your session has expired. Please log in again.
+        <% } else { %>
+            <%= error %>
+        <% } %>
+    </div>
+<% } %>
+
+<% if (errors && errors.length > 0) { %>
+    <% errors.forEach(function(error) { %>
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <%= error %>
+        </div>
+    <% }); %>
+<% } %>
+
+<% if (message && message.length > 0) { %>
+    <% message.forEach(function(msg) { %>
+        <div class="alert alert-info" role="alert">
+            <i class="fas fa-info-circle"></i> <%= msg %>
+        </div>
+    <% }); %>
+<% } %>
+
+<form action="/admin/login" method="POST" class="admin-login-form">
+    <div class="mb-3">
+        <label for="email" class="form-label">
+            <i class="fas fa-envelope"></i> Email Address
+        </label>
+        <input type="email" class="form-control" id="email" name="email" required 
+               placeholder="admin@example.com" autocomplete="email">
+    </div>
+    
+    <div class="mb-3">
+        <label for="password" class="form-label">
+            <i class="fas fa-lock"></i> Password
+        </label>
+        <input type="password" class="form-control" id="password" name="password" required 
+               placeholder="Enter your password" autocomplete="current-password">
+    </div>
+    
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+        <label class="form-check-label" for="remember">
+            Remember me for 30 days
+        </label>
+    </div>
+    
+    <button type="submit" class="btn btn-primary w-100 admin-login-btn">
+        <i class="fas fa-sign-in-alt"></i> Sign In to Admin Panel
+    </button>
+</form>
+
+<div class="admin-login-help mt-4">
+    <div class="text-center">
+        <small class="text-muted">
+            <i class="fas fa-question-circle"></i>
+            Need help accessing your account? Contact the system administrator.
+        </small>
+    </div>
+</div>
+

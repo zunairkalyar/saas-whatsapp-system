@@ -1,0 +1,18 @@
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h3><%= appName %></h3>
+    </div>
+    <ul class="sidebar-menu">
+        <li><a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="/whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</a></li>
+        <li><a href="/subscription"><i class="fas fa-credit-card"></i> Subscription</a></li>
+        <li><a href="/templates"><i class="fas fa-file-alt"></i> Templates</a></li>
+        <li><a href="/analytics"><i class="fas fa-chart-line"></i> Analytics</a></li>
+        <% if (isAdmin) { %>
+            <li><a href="/admin"><i class="fas fa-user-shield"></i> Admin Panel</a></li>
+        <% } %>
+        <li><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+    </ul>
+</div>
+
+

@@ -1,0 +1,384 @@
+<div class="container-fluid">
+    <h1 class="mb-4">Subscription & Billing</h1>
+
+    <div class="row">
+        <!-- Current Subscription -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-credit-card"></i> Current Subscription
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <% if (subscription) { %>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4 class="text-primary"><%= subscription.plan.name %> Plan</h4>
+                                <p class="text-muted"><%= subscription.plan.description %></p>
+                                
+                                <div class="subscription-details">
+                                    <div class="detail-item">
+                                        <strong>Monthly Limit:</strong> 
+                                        <%= subscription.monthly_limit.toLocaleString() %> messages
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Current Usage:</strong> 
+                                        <%= subscription.current_usage.toLocaleString() %> / <%= subscription.monthly_limit.toLocaleString() %>
+                                        (<%= Math.round(subscription.usage_percentage) %>%)
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Remaining:</strong> 
+                                        <%= subscription.remaining_messages.toLocaleString() %> messages
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Billing Cycle:</strong> 
+                                        <%= new Date(subscription.billing_cycle_start).toLocaleDateString() %> - 
+                                        <%= new Date(subscription.billing_cycle_end).toLocaleDateString() %>
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>Status:</strong> 
+                                        <span class="badge badge-<%= subscription.status === 'active' ? 'success' : 'warning' %>">
+                                            <%= subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1) %>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- Usage Progress Bar -->
+                                <div class="usage-progress">
+                                    <label>Usage This Month</label>
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar <%= subscription.usage_percentage > 80 ? 'bg-warning' : 'bg-success' %>" 
+                                             style="width: <%= Math.min(subscription.usage_percentage, 100) %>%">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        <%= subscription.current_usage.toLocaleString() %> of <%= subscription.monthly_limit.toLocaleString() %> messages used
+                                    </small>
+                                </div>
+
+                                <% if (subscription.usage_percentage > 80) { %>
+                                    <div class="alert alert-warning mt-3">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <strong>Usage Warning:</strong> You've used <%= Math.round(subscription.usage_percentage) %>% of your monthly limit.
+                                        <% if (subscription.usage_percentage >= 100) { %>
+                                            <br><small>You've reached your limit. Consider upgrading your plan.</small>
+                                        <% } %>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>No Active Subscription</strong>
+                            <p>You don't have an active subscription. Choose a plan below to get started.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Available Plans -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-list"></i> Available Plans
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <% availablePlans.forEach(plan => { %>
+                            <div class="col-md-6 mb-4">
+                                <div class="plan-card <%= subscription && subscription.plan_id === plan.id ? 'current-plan' : '' %>">
+                                    <div class="plan-header">
+                                        <h5 class="plan-name"><%= plan.name %></h5>
+                                        <div class="plan-price">
+                                            <% if (plan.price_cents === 0) { %>
+                                                <span class="price">Free</span>
+                                            <% } else { %>
+                                                <span class="price"><%= plan.getFormattedPrice() %></span>
+                                                <span class="period">/month</span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    <div class="plan-description">
+                                        <p><%= plan.description %></p>
+                                    </div>
+                                    <div class="plan-features">
+                                        <ul>
+                                            <% plan.features.forEach(feature => { %>
+                                                <li><i class="fas fa-check text-success"></i> <%= feature %></li>
+                                            <% }); %>
+                                        </ul>
+                                    </div>
+                                    <div class="plan-action">
+                                        <% if (subscription && subscription.plan_id === plan.id) { %>
+                                            <button class="btn btn-outline-primary" disabled>Current Plan</button>
+                                        <% } else { %>
+                                            <form action="/subscription/change-plan" method="POST" style="display: inline;">
+                                                <input type="hidden" name="planId" value="<%= plan.id %>">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <%= subscription ? 'Switch to This Plan' : 'Choose This Plan' %>
+                                                </button>
+                                            </form>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Usage Summary -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-bar"></i> Usage Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="usage-stats">
+                        <div class="stat-item">
+                            <div class="stat-value"><%= monthlyUsage.toLocaleString() %></div>
+                            <div class="stat-label">Messages This Month</div>
+                        </div>
+                        <% if (subscription) { %>
+                            <div class="stat-item">
+                                <div class="stat-value"><%= subscription.remaining_messages.toLocaleString() %></div>
+                                <div class="stat-label">Messages Remaining</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value"><%= subscription.days_until_renewal %></div>
+                                <div class="stat-label">Days Until Renewal</div>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-cog"></i> Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="quick-actions">
+                        <a href="/subscription/usage" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-chart-line"></i> View Usage Analytics
+                        </a>
+                        <a href="/subscription/billing" class="btn btn-outline-secondary btn-block">
+                            <i class="fas fa-receipt"></i> Billing History
+                        </a>
+                        <% if (subscription && subscription.status === 'active') { %>
+                            <button class="btn btn-outline-danger btn-block" onclick="showCancelModal()">
+                                <i class="fas fa-times"></i> Cancel Subscription
+                            </button>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-question-circle"></i> Need Help?
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>Have questions about your subscription or billing?</p>
+                    <a href="mailto:support@saaswhatsapp.com" class="btn btn-outline-info btn-block">
+                        <i class="fas fa-envelope"></i> Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Subscription Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Subscription</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form action="/subscription/cancel" method="POST">
+                <div class="modal-body">
+                    <p>Are you sure you want to cancel your subscription?</p>
+                    <p class="text-muted">Your subscription will remain active until the end of your current billing cycle.</p>
+                    
+                    <div class="form-group">
+                        <label for="reason">Reason for cancellation (optional):</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" 
+                                  placeholder="Help us improve by telling us why you're cancelling..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Keep Subscription</button>
+                    <button type="submit" class="btn btn-danger">Cancel Subscription</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .plan-card {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .plan-card:hover {
+        border-color: #007bff;
+        box-shadow: 0 4px 8px rgba(0, 123, 255, 0.1);
+    }
+    
+    .plan-card.current-plan {
+        border-color: #28a745;
+        background-color: #f8fff9;
+    }
+    
+    .plan-header {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .plan-price .price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #007bff;
+    }
+    
+    .plan-price .period {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .plan-description {
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    
+    .plan-features ul {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 20px;
+    }
+    
+    .plan-features li {
+        padding: 5px 0;
+        font-size: 0.9rem;
+    }
+    
+    .plan-features i {
+        margin-right: 8px;
+    }
+    
+    .plan-action {
+        text-align: center;
+    }
+    
+    .subscription-details .detail-item {
+        margin-bottom: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .subscription-details .detail-item:last-child {
+        border-bottom: none;
+    }
+    
+    .usage-progress {
+        margin-bottom: 20px;
+    }
+    
+    .usage-stats .stat-item {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .usage-stats .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #007bff;
+    }
+    
+    .usage-stats .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .quick-actions .btn {
+        margin-bottom: 10px;
+    }
+    
+    .progress {
+        height: 20px;
+    }
+    
+    .badge {
+        font-size: 0.8rem;
+        padding: 0.375rem 0.5rem;
+    }
+    
+    .badge-success {
+        background-color: #28a745;
+    }
+    
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+</style>
+
+<script>
+function showCancelModal() {
+    document.getElementById('cancelModal').style.display = 'block';
+    document.getElementById('cancelModal').classList.add('show');
+}
+
+// Simple modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('cancelModal');
+    const closeButtons = modal.querySelectorAll('[data-dismiss="modal"]');
+    
+    closeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        });
+    });
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        }
+    });
+});
+</script>
+
