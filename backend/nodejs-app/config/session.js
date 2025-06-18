@@ -27,7 +27,9 @@ const sessionConfig = {
 };
 
 // Sync session store
-sessionStore.sync();
+sessionStore.sync().catch(err => {
+    console.error('Unable to sync session store:', err);
+});
 
 module.exports = sessionConfig;
 

@@ -1,5 +1,6 @@
 const { Message, MessageTemplate, User, Subscription } = require("../models");
 const whatsappService = require("./whatsappService");
+const templateEngine = require("./templateEngine");
 
 class NotificationService {
     /**
@@ -38,7 +39,8 @@ class NotificationService {
             }
             
             // Generate message content from template
-            const messageContent = this.generateMessageFromTemplate(template.content, orderData);
+            const templateText = template.template_content || template.content;
+            const messageContent = this.generateMessageFromTemplate(templateText, orderData);
             
             // Get customer phone number from order data
             const customerPhone = this.extractPhoneNumber(orderData);
@@ -156,31 +158,21 @@ class NotificationService {
      * Generate message content from template with order data
      */
     static generateMessageFromTemplate(templateContent, orderData) {
-        let message = templateContent;
-        
-        // Replace common placeholders
-        const replacements = {
-            "{{customer_name}}": orderData.customer?.first_name || "Customer",
-            "{{customer_full_name}}": orderData.customer ? 
-                `${orderData.customer.first_name} ${orderData.customer.last_name}`.trim() : "Customer",
-            "{{order_number}}": orderData.order_number || orderData.name || "N/A",
-            "{{order_total}}": orderData.total_price || "0.00",
-            "{{currency}}": orderData.currency || "USD",
-            "{{order_date}}": orderData.created_at ? 
-                new Date(orderData.created_at).toLocaleDateString() : new Date().toLocaleDateString(),
-            "{{store_name}}": orderData.shop_name || "Store",
-            "{{tracking_number}}": orderData.tracking_number || "N/A",
-            "{{shipping_address}}": this.formatShippingAddress(orderData.shipping_address),
-            "{{items_count}}": orderData.line_items?.length || 0,
-            "{{items_list}}": this.formatItemsList(orderData.line_items)
+        const data = {
+            customer_name: orderData.customer?.first_name || "Customer",
+            customer_full_name: orderData.customer ? `${orderData.customer.first_name} ${orderData.customer.last_name}`.trim() : "Customer",
+            order_number: orderData.order_number || orderData.name || "N/A",
+            order_total: orderData.total_price || "0.00",
+            currency: orderData.currency || "USD",
+            order_date: orderData.created_at ? new Date(orderData.created_at).toLocaleDateString() : new Date().toLocaleDateString(),
+            store_name: orderData.shop_name || "Store",
+            tracking_number: orderData.tracking_number || "N/A",
+            shipping_address: this.formatShippingAddress(orderData.shipping_address),
+            items_count: orderData.line_items?.length || 0,
+            items_list: this.formatItemsList(orderData.line_items)
         };
-        
-        // Replace all placeholders
-        for (const [placeholder, value] of Object.entries(replacements)) {
-            message = message.replace(new RegExp(placeholder.replace(/[{}]/g, "\\$&"), "g"), value);
-        }
-        
-        return message;
+
+        return templateEngine.render(templateContent, data);
     }
     
     /**

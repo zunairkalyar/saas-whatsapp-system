@@ -6,12 +6,29 @@ This document defines the complete database schema for the SaaS WhatsApp Notific
 
 ## Database Tables
 
-### 1. users
+### 1. tenants
+Stores tenant information for multi-tenant deployments.
+
+```sql
+CREATE TABLE tenants (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    slug VARCHAR(100) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes
+CREATE INDEX idx_tenants_slug ON tenants(slug);
+```
+
+### 2. users
 Stores client account information and authentication details.
 
 ```sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
+    tenant_id INTEGER REFERENCES tenants(id) ON DELETE CASCADE,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     shop_domain VARCHAR(255) UNIQUE NOT NULL,
@@ -31,9 +48,10 @@ CREATE TABLE users (
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_shop_domain ON users(shop_domain);
 CREATE INDEX idx_users_account_status ON users(account_status);
+CREATE INDEX idx_users_tenant_id ON users(tenant_id);
 ```
 
-### 2. subscriptions
+### 3. subscriptions
 Manages billing and quota information for user accounts.
 
 ```sql
@@ -60,7 +78,7 @@ CREATE INDEX idx_subscriptions_status ON subscriptions(status);
 CREATE INDEX idx_subscriptions_billing_cycle ON subscriptions(billing_cycle_start, billing_cycle_end);
 ```
 
-### 3. orders
+### 4. orders
 Stores Shopify order information received through webhooks.
 
 ```sql
@@ -101,7 +119,7 @@ CREATE INDEX idx_orders_webhook_received_at ON orders(webhook_received_at);
 CREATE UNIQUE INDEX idx_orders_user_shopify_unique ON orders(user_id, shopify_order_id);
 ```
 
-### 4. messages
+### 5. messages
 Logs all WhatsApp messages sent through the system.
 
 ```sql
@@ -132,7 +150,7 @@ CREATE INDEX idx_messages_delivery_status ON messages(delivery_status);
 CREATE INDEX idx_messages_sent_at ON messages(sent_at);
 ```
 
-### 5. whatsapp_sessions
+### 6. whatsapp_sessions
 Manages authentication states for Baileys connections.
 
 ```sql
@@ -158,7 +176,7 @@ CREATE INDEX idx_whatsapp_sessions_connection_status ON whatsapp_sessions(connec
 CREATE UNIQUE INDEX idx_whatsapp_sessions_user_unique ON whatsapp_sessions(user_id);
 ```
 
-### 6. message_templates
+### 7. message_templates
 Stores customizable message templates for different events.
 
 ```sql
@@ -181,7 +199,7 @@ CREATE INDEX idx_message_templates_event_type ON message_templates(event_type);
 CREATE UNIQUE INDEX idx_message_templates_user_event_unique ON message_templates(user_id, event_type, name);
 ```
 
-### 7. webhook_logs
+### 8. webhook_logs
 Logs all incoming webhook requests for debugging and audit purposes.
 
 ```sql
@@ -208,7 +226,7 @@ CREATE INDEX idx_webhook_logs_processing_status ON webhook_logs(processing_statu
 CREATE INDEX idx_webhook_logs_created_at ON webhook_logs(created_at);
 ```
 
-### 8. usage_analytics
+### 9. usage_analytics
 Tracks detailed usage analytics for billing and reporting.
 
 ```sql
@@ -231,7 +249,7 @@ CREATE INDEX idx_usage_analytics_date ON usage_analytics(date);
 CREATE UNIQUE INDEX idx_usage_analytics_user_date_unique ON usage_analytics(user_id, date);
 ```
 
-### 9. admin_users
+### 10. admin_users
 Stores administrator account information.
 
 ```sql
@@ -254,7 +272,7 @@ CREATE INDEX idx_admin_users_email ON admin_users(email);
 CREATE INDEX idx_admin_users_role ON admin_users(role);
 ```
 
-### 10. system_settings
+### 11. system_settings
 Stores global system configuration settings.
 
 ```sql
@@ -322,6 +340,7 @@ EXECUTE FUNCTION update_subscription_usage();
 ## Data Relationships
 
 ### Primary Relationships
+- tenants → users (1:many)
 - users → subscriptions (1:1 current subscription)
 - users → orders (1:many)
 - users → messages (1:many)

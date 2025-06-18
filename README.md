@@ -49,13 +49,6 @@ saas-whatsapp-system/
 │   │   └── utils/          # Utility functions
 │   ├── config/             # Configuration files
 │   └── tests/              # Test files
-├── frontend/               # React admin dashboard
-│   ├── src/
-│   │   ├── components/     # React components
-│   │   ├── pages/          # Page components
-│   │   ├── services/       # API services
-│   │   └── utils/          # Utility functions
-│   └── public/             # Static assets
 ├── database/               # Database related files
 │   ├── migrations/         # Database migrations
 │   ├── seeds/              # Seed data
@@ -88,16 +81,11 @@ cd backend
 npm install
 ```
 
-3. Install frontend dependencies:
-```bash
-cd ../frontend
-npm install
-```
-
-4. Set up environment variables:
+3. Set up environment variables:
 ```bash
 cp backend/.env.example backend/.env
 # Edit .env file with your configuration
+# Set MULTI_TENANT=true if using subdomain based tenant routing
 ```
 
 5. Set up the database:
@@ -107,15 +95,10 @@ npm run migrate
 npm run seed
 ```
 
-6. Start the development servers:
+6. Start the development server:
 ```bash
-# Terminal 1 - Backend
 cd backend
 npm run dev
-
-# Terminal 2 - Frontend
-cd frontend
-npm start
 ```
 
 ### Docker Setup
@@ -278,12 +261,6 @@ npm test
 npm run test:coverage
 ```
 
-### Frontend Tests
-```bash
-cd frontend
-npm test
-npm run test:coverage
-```
 
 ### Integration Tests
 ```bash

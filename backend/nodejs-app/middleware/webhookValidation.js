@@ -2,7 +2,7 @@ const crypto = require("crypto");
 
 exports.validateWebhookSignature = (req, res, next) => {
     const signature = req.get("X-Shopify-Hmac-Sha256");
-    const body = req.body;
+    const body = req.rawBody || JSON.stringify(req.body);
     const webhookSecret = process.env.SHOPIFY_WEBHOOK_SECRET;
 
     if (!signature) {
@@ -17,7 +17,7 @@ exports.validateWebhookSignature = (req, res, next) => {
     try {
         // Create HMAC hash
         const hmac = crypto.createHmac("sha256", webhookSecret);
-        hmac.update(JSON.stringify(body), "utf8");
+        hmac.update(body, "utf8");
         const calculatedSignature = hmac.digest("base64");
 
         // Compare signatures

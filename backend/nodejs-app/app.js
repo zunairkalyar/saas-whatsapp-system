@@ -5,10 +5,12 @@ const helmet = require("helmet");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const cookieParser = require("cookie-parser");
+const session = require("express-session");
 const sessionConfig = require("./config/session");
 const { sequelize } = require("./config/database");
 const { setupAssociations } = require("./models");
 const errorHandler = require("./middleware/errorHandler");
+const tenantResolver = require("./middleware/tenantResolver");
 
 // Load environment variables
 dotenv.config();
@@ -28,16 +30,25 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Body Parsers
+function rawBodySaver(req, res, buf) {
+    if (buf && buf.length) {
+        req.rawBody = buf.toString('utf8');
+    }
+}
+// Use raw parser for Shopify webhooks so we can verify HMAC using the raw body
+app.use('/webhooks/shopify', express.raw({ type: 'application/json', verify: rawBodySaver }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(tenantResolver);
 
 // Session Configuration
-app.use(sessionConfig);
+app.use(session(sessionConfig));
 
 // View Engine Setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
+app.locals.appName = process.env.APP_NAME || 'SaaS WhatsApp System';
 
 // Static Files
 app.use(express.static(path.join(__dirname, "public")));
@@ -60,6 +71,7 @@ sequelize.authenticate()
 
 // Import routes
 const authRoutes = require("./routes/auth");
+const indexRoutes = require("./routes/index");
 const dashboardRoutes = require("./routes/dashboard");
 const webhookRoutes = require("./routes/webhooks");
 const whatsappRoutes = require("./routes/whatsapp");
@@ -68,6 +80,7 @@ const adminRoutes = require("./routes/admin");
 const healthRoutes = require("./routes/health");
 
 // Routes
+app.use("/", indexRoutes);
 app.use("/", authRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/webhooks", webhookRoutes);

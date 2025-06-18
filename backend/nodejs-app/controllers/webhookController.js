@@ -8,7 +8,12 @@ exports.handleShopifyWebhook = async (req, res) => {
     try {
         const topic = req.get("X-Shopify-Topic");
         const shopDomain = req.get("X-Shopify-Shop-Domain");
-        const payload = req.body;
+        let payload = req.body;
+        if (Buffer.isBuffer(payload)) {
+            payload = JSON.parse(payload.toString('utf8'));
+        } else if (typeof payload === 'string') {
+            payload = JSON.parse(payload);
+        }
         const headers = {
             "X-Shopify-Topic": topic,
             "X-Shopify-Shop-Domain": shopDomain,

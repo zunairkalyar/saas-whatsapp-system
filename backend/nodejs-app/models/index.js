@@ -9,9 +9,22 @@ const WebhookLog = require('./WebhookLog');
 const UsageAnalytics = require('./UsageAnalytics');
 const AdminUser = require('./AdminUser');
 const SystemSettings = require('./SystemSettings');
+const Tenant = require('./Tenant');
 
 // Define associations
 function setupAssociations() {
+    // Tenant associations
+    Tenant.hasMany(User, {
+        foreignKey: 'tenant_id',
+        as: 'users',
+        onDelete: 'CASCADE'
+    });
+
+    User.belongsTo(Tenant, {
+        foreignKey: 'tenant_id',
+        as: 'tenant'
+    });
+
     // User associations
     User.hasOne(Subscription, { 
         foreignKey: 'user_id', 
@@ -138,6 +151,7 @@ module.exports = {
     UsageAnalytics,
     AdminUser,
     SystemSettings,
+    Tenant,
     setupAssociations
 };
 
